@@ -950,12 +950,14 @@ body {
 }
 
 .icon-muted,
-.icon-speaker-on {
+.icon-speaker-on,
+.icon-video-on {
   display: none;
 }
 
 .icon-unmuted,
-.icon-speaker-off {
+.icon-speaker-off,
+.icon-video-off {
   display: block;
 }
 
@@ -973,6 +975,55 @@ body {
 
 .btn-control.active .icon-speaker-off {
   display: none;
+}
+
+.btn-control.active .icon-video-on {
+  display: block;
+}
+
+.btn-control.active .icon-video-off {
+  display: none;
+}
+
+/* ==================== Video Styles ==================== */
+.video-container {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto var(--spacing-lg);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.8);
+  box-shadow: var(--shadow-xl);
+}
+
+.remote-video {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: var(--radius-xl);
+}
+
+.local-video {
+  position: absolute;
+  bottom: var(--spacing-md);
+  right: var(--spacing-md);
+  width: 120px;
+  height: auto;
+  border-radius: var(--radius-lg);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: var(--shadow-lg);
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 10;
+}
+
+@media (max-width: 480px) {
+  .local-video {
+    width: 80px;
+    bottom: var(--spacing-sm);
+    right: var(--spacing-sm);
+  }
 }
 
 /* ==================== Animations ==================== */

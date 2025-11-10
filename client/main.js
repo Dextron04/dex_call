@@ -16,6 +16,7 @@ let callStartTime = null;
 let callDurationInterval = null;
 let isMuted = false;
 let isSpeakerOn = false;
+let isVideoOn = false;
 let bgAnimation = null;
 let circularText = null;
 let pixelCardAnimation = null;
@@ -70,9 +71,13 @@ const elements = {
     muteBtn: document.getElementById('muteBtn'),
     endCallBtn: document.getElementById('endCallBtn'),
     speakerBtn: document.getElementById('speakerBtn'),
+    videoBtn: document.getElementById('videoBtn'),
 
-    // Audio
+    // Audio & Video
     remoteAudio: document.getElementById('remoteAudio'),
+    videoContainer: document.getElementById('videoContainer'),
+    localVideo: document.getElementById('localVideo'),
+    remoteVideo: document.getElementById('remoteVideo'),
 
     // Toast
     toastContainer: document.getElementById('toastContainer')
@@ -285,8 +290,13 @@ async function startCall() {
     try {
         pc = new RTCPeerConnection(config);
 
-        localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+        localStream = await navigator.mediaDevices.getUserMedia({ video: isVideoOn, audio: true });
         localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
+
+        // Display local video if enabled
+        if (isVideoOn && elements.localVideo) {
+            elements.localVideo.srcObject = localStream;
+        }
 
         pc.onicecandidate = (e) => {
             if (e.candidate) {
@@ -295,7 +305,16 @@ async function startCall() {
         };
 
         pc.ontrack = (e) => {
-            elements.remoteAudio.srcObject = e.streams[0];
+            const stream = e.streams[0];
+            elements.remoteAudio.srcObject = stream;
+
+            // Display remote video if it has video tracks
+            const videoTrack = stream.getVideoTracks()[0];
+            if (videoTrack && elements.remoteVideo) {
+                elements.remoteVideo.srcObject = stream;
+                elements.videoContainer.classList.remove('hidden');
+            }
+
             startCallDuration();
             showCallState('active');
             elements.activeCallerId.textContent = peerId;
@@ -368,7 +387,16 @@ async function acceptCall(offer) {
     };
 
     pc.ontrack = (e) => {
-        elements.remoteAudio.srcObject = e.streams[0];
+        const stream = e.streams[0];
+        elements.remoteAudio.srcObject = stream;
+
+        // Display remote video if it has video tracks
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack && elements.remoteVideo) {
+            elements.remoteVideo.srcObject = stream;
+            elements.videoContainer.classList.remove('hidden');
+        }
+
         startCallDuration();
         showCallState('active');
         elements.activeCallerId.textContent = peerId;
@@ -383,8 +411,13 @@ async function acceptCall(offer) {
         }
     };
 
-    localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+    localStream = await navigator.mediaDevices.getUserMedia({ video: isVideoOn, audio: true });
     localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
+
+    // Display local video if enabled
+    if (isVideoOn && elements.localVideo) {
+        elements.localVideo.srcObject = localStream;
+    }
 
     await pc.setRemoteDescription(offer);
     const answer = await pc.createAnswer();
@@ -440,6 +473,67 @@ elements.speakerBtn.addEventListener('click', () => {
     showToast(isSpeakerOn ? 'Speaker on' : 'Speaker off', 'info');
 });
 
+elements.videoBtn.addEventListener('click', async () => {
+    if (!localStream) return;
+
+    isVideoOn = !isVideoOn;
+
+    try {
+        if (isVideoOn) {
+            // Add video track to existing stream
+            const videoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            const videoTrack = videoStream.getVideoTracks()[0];
+
+            localStream.addTrack(videoTrack);
+
+            // Add video track to peer connection
+            if (pc) {
+                const sender = pc.addTrack(videoTrack, localStream);
+            }
+
+            // Display local video
+            if (elements.localVideo) {
+                elements.localVideo.srcObject = localStream;
+                elements.videoContainer.classList.remove('hidden');
+            }
+
+            elements.videoBtn.classList.add('active');
+            showToast('Camera on', 'success');
+        } else {
+            // Remove video track
+            localStream.getVideoTracks().forEach(track => {
+                track.stop();
+                localStream.removeTrack(track);
+
+                // Remove from peer connection
+                if (pc) {
+                    const sender = pc.getSenders().find(s => s.track === track);
+                    if (sender) {
+                        pc.removeTrack(sender);
+                    }
+                }
+            });
+
+            // Hide video container if no remote video
+            if (elements.remoteVideo && elements.remoteVideo.srcObject) {
+                const remoteStream = elements.remoteVideo.srcObject;
+                if (!remoteStream.getVideoTracks().length) {
+                    elements.videoContainer.classList.add('hidden');
+                }
+            } else {
+                elements.videoContainer.classList.add('hidden');
+            }
+
+            elements.videoBtn.classList.remove('active');
+            showToast('Camera off', 'info');
+        }
+    } catch (error) {
+        console.error('Error toggling video:', error);
+        showToast('Failed to toggle camera', 'error');
+        isVideoOn = !isVideoOn; // Revert state
+    }
+});
+
 elements.endCallBtn.addEventListener('click', () => {
     // Notify the other peer that we're ending the call
     if (peerId && ws && ws.readyState === WebSocket.OPEN) {
@@ -482,8 +576,22 @@ function endCall() {
     elements.callBtn.disabled = false;
     isMuted = false;
     isSpeakerOn = false;
+    isVideoOn = false;
     elements.muteBtn.classList.remove('active');
     elements.speakerBtn.classList.remove('active');
+    elements.videoBtn.classList.remove('active');
+
+    // Clear video elements
+    if (elements.localVideo) {
+        elements.localVideo.srcObject = null;
+    }
+    if (elements.remoteVideo) {
+        elements.remoteVideo.srcObject = null;
+    }
+    if (elements.videoContainer) {
+        elements.videoContainer.classList.add('hidden');
+    }
+
     peerId = '';
 }
 
