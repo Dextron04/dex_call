@@ -10,6 +10,7 @@ const WS_URL = window.location.protocol === 'https:'
 let ws;
 let pc;
 let localStream;
+let remoteStream;
 let myId = '';
 let peerId = '';
 let callStartTime = null;
@@ -305,12 +306,25 @@ async function startCall() {
         };
 
         pc.ontrack = (e) => {
-            const stream = e.streams[0];
-            elements.remoteAudio.srcObject = stream;
+            console.log('Track received:', e.track.kind, 'Streams:', e.streams.length);
 
-            // Display remote video if it has video tracks
-            const videoTrack = stream.getVideoTracks()[0];
-            if (videoTrack && elements.remoteVideo) {
+            // Use the first stream if available, otherwise create a new one
+            if (!remoteStream) {
+                remoteStream = e.streams[0] || new MediaStream();
+            }
+
+            const stream = remoteStream;
+
+            // Add the track to our remote stream if it's not already there
+            if (!stream.getTracks().find(t => t.id === e.track.id)) {
+                stream.addTrack(e.track);
+            }
+
+            if (e.track.kind === 'audio') {
+                console.log('Setting remote audio');
+                elements.remoteAudio.srcObject = stream;
+            } else if (e.track.kind === 'video') {
+                console.log('Setting remote video');
                 elements.remoteVideo.srcObject = stream;
                 elements.videoContainer.classList.remove('hidden');
             }
@@ -548,6 +562,12 @@ function endCall() {
     if (localStream) {
         localStream.getTracks().forEach(track => track.stop());
         localStream = null;
+    }
+
+    // Stop remote stream
+    if (remoteStream) {
+        remoteStream.getTracks().forEach(track => track.stop());
+        remoteStream = null;
     }
 
     // Close peer connection
