@@ -1,13 +1,21 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>client</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>WebRTC Voice Call</title>
+</head>
+
+<body>
+  <h2>WebRTC Voice Call Demo</h2>
+  <div>
+    Your ID: <input id="myId" placeholder="your id">
+    Peer ID: <input id="peerId" placeholder="peer id">
+    <button id="registerBtn">Register</button>
+    <button id="callBtn">Call</button>
+  </div>
+  <audio id="remoteAudio" autoplay></audio>
+  <script type="module" src="/main.js"></script>
+</body>
+
 </html>

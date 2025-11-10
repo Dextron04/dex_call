@@ -32,4 +32,4 @@ wss.on('connection', ws => {
 
 server.listen(8080, () => {
     console.log('Signaling server is running on ws://localhost:8080');
-}
+});
