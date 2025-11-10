@@ -4,7 +4,9 @@ import { CircularText } from './src/circularText.js';
 import { PixelCard } from './src/pixelCard.js';
 import { DecryptedText } from './src/decryptedText.js';
 
-const WS_URL = 'ws://localhost:8080';
+const WS_URL = window.location.protocol === 'https:'
+    ? 'wss://dex-call.dextron04.in/wss'
+    : 'ws://localhost:8080';
 let ws;
 let pc;
 let localStream;
