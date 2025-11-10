@@ -328,6 +328,9 @@ async function handleIncomingCall(offer, from) {
     showCallState('incoming');
     showToast(`Incoming call from ${from || 'Unknown'}`, 'info');
 
+    // Re-enable accept button for new incoming call
+    elements.acceptCallBtn.disabled = false;
+
     // Store offer for when user accepts
     window.pendingOffer = offer;
 }
