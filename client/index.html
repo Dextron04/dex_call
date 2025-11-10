@@ -1,20 +1,193 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
-  <title>WebRTC Voice Call</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="description" content="Simple and elegant voice calling application">
+  <title>Voice Call</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css">
 </head>
 
 <body>
-  <h2>WebRTC Voice Call Demo</h2>
-  <div>
-    Your ID: <input id="myId" placeholder="your id">
-    Peer ID: <input id="peerId" placeholder="peer id">
-    <button id="registerBtn">Register</button>
-    <button id="callBtn">Call</button>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="logo-container">
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+            </path>
+          </svg>
+          <h1 class="app-title">Voice Call</h1>
+        </div>
+        <div class="connection-status" id="connectionStatus">
+          <span class="status-dot"></span>
+          <span class="status-text">Connecting...</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Registration Card -->
+      <div class="card registration-card" id="registrationCard">
+        <div class="card-header">
+          <h2 class="card-title">Get Started</h2>
+          <p class="card-subtitle">Create your unique ID to start calling</p>
+        </div>
+        <div class="card-body">
+          <div class="input-group">
+            <label for="myId" class="input-label">Your ID</label>
+            <input type="text" id="myId" class="input-field" placeholder="Enter your unique ID" autocomplete="off">
+            <span class="input-hint">Choose a memorable ID (e.g., john_doe)</span>
+          </div>
+          <button id="registerBtn" class="btn btn-primary btn-large">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <line x1="20" y1="8" x2="20" y2="14"></line>
+              <line x1="23" y1="11" x2="17" y2="11"></line>
+            </svg>
+            <span>Register</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Call Card -->
+      <div class="card call-card hidden" id="callCard">
+        <div class="user-info">
+          <div class="user-avatar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div class="user-details">
+            <span class="user-label">Your ID</span>
+            <span class="user-id" id="displayMyId">-</span>
+          </div>
+        </div>
+
+        <!-- Call State: Idle -->
+        <div class="call-state call-state-idle" id="callStateIdle">
+          <div class="input-group">
+            <label for="peerId" class="input-label">Call Someone</label>
+            <input type="text" id="peerId" class="input-field" placeholder="Enter peer ID" autocomplete="off">
+            <span class="input-hint">Enter the ID of the person you want to call</span>
+          </div>
+          <button id="callBtn" class="btn btn-success btn-large">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path
+                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+              </path>
+            </svg>
+            <span>Start Call</span>
+          </button>
+        </div>
+
+        <!-- Call State: Incoming -->
+        <div class="call-state call-state-incoming hidden" id="callStateIncoming">
+          <div class="incoming-call-animation">
+            <div class="pulse-ring"></div>
+            <div class="pulse-ring delay-1"></div>
+            <div class="pulse-ring delay-2"></div>
+            <div class="caller-avatar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+          </div>
+          <div class="incoming-call-info">
+            <p class="incoming-call-label">Incoming Call</p>
+            <p class="incoming-caller-id" id="incomingCallerId">Unknown</p>
+          </div>
+          <div class="incoming-call-actions">
+            <button id="acceptCallBtn" class="btn btn-success btn-circle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                  d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                </path>
+              </svg>
+            </button>
+            <button id="rejectCallBtn" class="btn btn-danger btn-circle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Call State: Active -->
+        <div class="call-state call-state-active hidden" id="callStateActive">
+          <div class="active-call-info">
+            <div class="call-avatar">
+              <div class="sound-wave">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+              </div>
+            </div>
+            <p class="active-call-label">On Call With</p>
+            <p class="active-caller-id" id="activeCallerId">-</p>
+            <p class="call-duration" id="callDuration">00:00</p>
+          </div>
+          <div class="call-controls">
+            <button id="muteBtn" class="btn btn-control" title="Mute">
+              <svg class="icon-unmuted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+              <svg class="icon-muted hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+                <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path>
+                <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+            </button>
+            <button id="endCallBtn" class="btn btn-danger btn-circle-large">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                  d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+                  transform="rotate(135 12 12)"></path>
+              </svg>
+            </button>
+            <button id="speakerBtn" class="btn btn-control" title="Speaker">
+              <svg class="icon-speaker-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line x1="23" y1="9" x2="17" y2="15"></line>
+                <line x1="17" y1="9" x2="23" y2="15"></line>
+              </svg>
+              <svg class="icon-speaker-on hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Audio Element -->
+    <audio id="remoteAudio" autoplay playsinline></audio>
   </div>
-  <audio id="remoteAudio" autoplay></audio>
+
   <script type="module" src="/main.js"></script>
 </body>
 
