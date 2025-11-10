@@ -6,13 +6,15 @@ A beautiful, modern voice calling application built with WebRTC, featuring a sle
 
 ### UI/UX Enhancements
 
+- **Animated WebGL Background** - Stunning procedurally generated background using OGL shaders
 - **Mobile-First Design** - Optimized for touch devices with responsive layout
-- **Modern Material Design** - Beautiful gradients, shadows, and smooth animations
+- **Modern Material Design** - Beautiful gradients, shadows, and smooth animations with glassmorphism
 - **Touch-Friendly Controls** - Large, easy-to-tap buttons (minimum 48px touch targets)
 - **Real-time Visual Feedback** - Connection status, call states, and notifications
 - **Smooth Animations** - Slide-up cards, pulse rings, sound wave animations
-- **Dark Theme** - Eye-friendly dark color scheme
+- **Dark Theme with Transparency** - Eye-friendly dark theme with semi-transparent glass effects
 - **Safe Area Support** - Respects iPhone notch and other device safe areas
+- **Interactive Background** - Mouse/touch-responsive background animation
 
 ### Functional Features
 
@@ -147,12 +149,40 @@ The client will be available at `http://localhost:5173`
 
 ## 🎨 Design System
 
+### Background Animation
+
+The application features a mesmerizing WebGL-powered background animation powered by **OGL** (a minimal WebGL library). The animation includes:
+
+- **Procedural shader effects** - Real-time generative art
+- **Smooth color transitions** - Indigo to purple gradient flow
+- **Interactive mouse/touch tracking** - Animation responds to user input
+- **Optimized for mobile** - 60fps performance on modern devices
+- **Glassmorphism UI** - Semi-transparent cards with backdrop blur
+
+To customize the background animation, edit the parameters in `client/main.js`:
+
+```javascript
+bgAnimation = new BalatroBG(bgCanvas, {
+  spinRotation: -2.0, // Rotation speed
+  spinSpeed: 5.0, // Animation speed
+  color1: "#667eea", // Primary color
+  color2: "#764ba2", // Secondary color
+  color3: "#0f172a", // Background color
+  contrast: 3.0, // Contrast level
+  lighting: 0.35, // Lighting intensity
+  pixelFilter: 650.0, // Pixelation level
+  isRotate: true, // Enable rotation
+  mouseInteraction: true, // Enable mouse tracking
+});
+```
+
 ### Colors
 
 - **Primary** - Indigo gradient (#667eea → #764ba2)
 - **Success** - Emerald (#10b981)
 - **Danger** - Red (#ef4444)
-- **Background** - Dark slate (#0f172a)
+- **Background** - Dark slate (#0f172a) with animated WebGL overlay
+- **Glass Effects** - Semi-transparent elements with backdrop-filter blur
 
 ### Typography
 
@@ -176,6 +206,8 @@ The client will be available at `http://localhost:5173`
 - **Vite** - Fast development server and build tool
 - **WebRTC** - Peer-to-peer audio streaming
 - **WebSocket** - Real-time signaling
+- **OGL (Open Graphics Library)** - Lightweight WebGL library for background animation
+- **GLSL Shaders** - Custom fragment and vertex shaders for procedural effects
 
 ### Server Stack
 

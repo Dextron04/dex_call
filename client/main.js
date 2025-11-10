@@ -1,4 +1,7 @@
 // ==================== WebSocket & WebRTC Configuration ====================
+import { BalatroBG } from './src/balatro.js';
+import { CircularText } from './src/circularText.js';
+
 const WS_URL = 'ws://localhost:8080';
 let ws;
 let pc;
@@ -9,6 +12,8 @@ let callStartTime = null;
 let callDurationInterval = null;
 let isMuted = false;
 let isSpeakerOn = false;
+let bgAnimation = null;
+let circularText = null;
 
 const iceServers = [
     { urls: "stun:stun.l.google.com:19302" },
@@ -474,6 +479,47 @@ function stopCallDuration() {
 // ==================== Initialize App ====================
 function init() {
     console.log('Initializing Voice Call App...');
+
+    // Initialize background animation
+    const bgCanvas = document.getElementById('bgCanvas');
+    if (bgCanvas) {
+        try {
+            bgAnimation = new BalatroBG(bgCanvas, {
+                spinRotation: -2.0,
+                spinSpeed: 5.0,
+                color1: '#667eea',
+                color2: '#764ba2',
+                color3: '#0f172a',
+                contrast: 3.0,
+                lighting: 0.35,
+                spinAmount: 0.3,
+                pixelFilter: 650.0,
+                spinEase: 1.0,
+                isRotate: true,
+                mouseInteraction: true
+            });
+            console.log('Background animation initialized');
+        } catch (error) {
+            console.error('Failed to initialize background animation:', error);
+        }
+    }
+
+    // Initialize circular text animation
+    const circularTextContainer = document.getElementById('circularTextContainer');
+    if (circularTextContainer) {
+        try {
+            circularText = new CircularText(circularTextContainer, {
+                text: 'DEX CALL • DEX CALL • DEX CALL • DEX CALL • DEX CALL • DEX CALL • ',
+                spinDuration: 40,
+                onHover: 'speedUp',
+                className: ''
+            });
+            console.log('Circular text animation initialized');
+        } catch (error) {
+            console.error('Failed to initialize circular text:', error);
+        }
+    }
+
     connectWebSocket();
     showRegistrationCard();
 }
