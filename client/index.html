@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#6366f1">
   <meta name="description" content="Simple and elegant voice calling application">
-  <title>Voice Call</title>
+  <title>Dex Call</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -31,10 +31,6 @@
             </path>
           </svg>
           <h1 class="app-title">Dex Call</h1>
-        </div>
-        <div class="connection-status" id="connectionStatus">
-          <span class="status-dot"></span>
-          <span class="status-text">Connecting...</span>
         </div>
       </div>
     </header>
@@ -189,6 +185,14 @@
 
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Connection Status -->
+    <footer class="app-footer">
+      <div class="connection-status" id="connectionStatus">
+        <span class="status-dot"></span>
+        <span class="status-text">Connecting...</span>
+      </div>
+    </footer>
 
     <!-- Audio Element -->
     <audio id="remoteAudio" autoplay playsinline></audio>
