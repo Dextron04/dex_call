@@ -1,6 +1,8 @@
 // ==================== WebSocket & WebRTC Configuration ====================
 import { BalatroBG } from './src/balatro.js';
 import { CircularText } from './src/circularText.js';
+import { PixelCard } from './src/pixelCard.js';
+import { DecryptedText } from './src/decryptedText.js';
 
 const WS_URL = 'ws://localhost:8080';
 let ws;
@@ -14,6 +16,8 @@ let isMuted = false;
 let isSpeakerOn = false;
 let bgAnimation = null;
 let circularText = null;
+let pixelCardAnimation = null;
+let headerText = null;
 
 const iceServers = [
     { urls: "stun:stun.l.google.com:19302" },
@@ -111,6 +115,8 @@ function connectWebSocket() {
                 await handleAnswer(data.payload);
             } else if (data.type === 'ice') {
                 await handleIceCandidate(data.payload);
+            } else if (data.type === 'end-call') {
+                handleRemoteEndCall(data.from);
             }
         } catch (error) {
             console.error('Error handling message:', error);
@@ -282,7 +288,7 @@ async function startCall() {
 
         pc.onicecandidate = (e) => {
             if (e.candidate) {
-                ws.send(JSON.stringify({ type: 'ice', target: peerId, payload: e.candidate }));
+                ws.send(JSON.stringify({ type: 'ice', target: peerId, payload: e.candidate, id: myId }));
             }
         };
 
@@ -315,9 +321,10 @@ async function startCall() {
 // ==================== Incoming Call ====================
 async function handleIncomingCall(offer, from) {
     peerId = from;
-    elements.incomingCallerId.textContent = from;
+    elements.incomingCallerId.textContent = from || 'Unknown';
+    showCallCard();
     showCallState('incoming');
-    showToast(`Incoming call from ${from}`, 'info');
+    showToast(`Incoming call from ${from || 'Unknown'}`, 'info');
 
     // Store offer for when user accepts
     window.pendingOffer = offer;
@@ -336,8 +343,13 @@ elements.acceptCallBtn.addEventListener('click', async () => {
 });
 
 elements.rejectCallBtn.addEventListener('click', () => {
+    // Notify the caller that we rejected the call
+    if (peerId && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'end-call', target: peerId, id: myId }));
+    }
     delete window.pendingOffer;
     showCallState('idle');
+    peerId = '';
     showToast('Call rejected', 'info');
 });
 
@@ -346,7 +358,7 @@ async function acceptCall(offer) {
 
     pc.onicecandidate = (e) => {
         if (e.candidate) {
-            ws.send(JSON.stringify({ type: 'ice', target: peerId, payload: e.candidate }));
+            ws.send(JSON.stringify({ type: 'ice', target: peerId, payload: e.candidate, id: myId }));
         }
     };
 
@@ -393,6 +405,12 @@ async function handleIceCandidate(candidate) {
     }
 }
 
+function handleRemoteEndCall(from) {
+    console.log(`Call ended by ${from}`);
+    endCall();
+    showToast(`${from} ended the call`, 'info');
+}
+
 // ==================== Call Controls ====================
 elements.muteBtn.addEventListener('click', () => {
     if (!localStream) return;
@@ -418,6 +436,10 @@ elements.speakerBtn.addEventListener('click', () => {
 });
 
 elements.endCallBtn.addEventListener('click', () => {
+    // Notify the other peer that we're ending the call
+    if (peerId && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'end-call', target: peerId, id: myId }));
+    }
     endCall();
     showToast('Call ended', 'info');
 });
@@ -438,6 +460,17 @@ function endCall() {
     // Stop call duration timer
     stopCallDuration();
 
+    // Clean up pixel card animation
+    if (pixelCardAnimation) {
+        pixelCardAnimation.disappear();
+        setTimeout(() => {
+            if (pixelCardAnimation) {
+                pixelCardAnimation.destroy();
+                pixelCardAnimation = null;
+            }
+        }, 1000);
+    }
+
     // Reset UI
     showCallState('idle');
     elements.peerIdInput.value = '';
@@ -454,6 +487,27 @@ function startCallDuration() {
     callStartTime = Date.now();
     updateCallDuration();
     callDurationInterval = setInterval(updateCallDuration, 1000);
+
+    // Initialize pixel card animation when call connects
+    const callCard = document.getElementById('callCard');
+    if (callCard && !pixelCardAnimation) {
+        try {
+            pixelCardAnimation = new PixelCard(callCard, {
+                variant: 'purple',
+                gap: 5,
+                speed: 30
+            });
+            // Trigger the animation
+            setTimeout(() => {
+                if (pixelCardAnimation) {
+                    pixelCardAnimation.appear();
+                }
+            }, 100);
+            console.log('Pixel card animation started');
+        } catch (error) {
+            console.error('Failed to initialize pixel card animation:', error);
+        }
+    }
 }
 
 function updateCallDuration() {
@@ -479,6 +533,27 @@ function stopCallDuration() {
 // ==================== Initialize App ====================
 function init() {
     console.log('Initializing Voice Call App...');
+
+    // Initialize header decrypted text animation
+    const appTitle = document.querySelector('.app-title');
+    if (appTitle) {
+        try {
+            headerText = new DecryptedText(appTitle, {
+                text: 'Dex Call',
+                speed: 80,
+                maxIterations: 25,
+                sequential: true,
+                revealDirection: 'start',
+                useOriginalCharsOnly: false,
+                characters: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*',
+                encryptedClassName: 'encrypted-char',
+                animateOn: 'view'
+            });
+            console.log('Header decrypted text animation initialized');
+        } catch (error) {
+            console.error('Failed to initialize header text animation:', error);
+        }
+    }
 
     // Initialize background animation
     const bgCanvas = document.getElementById('bgCanvas');
